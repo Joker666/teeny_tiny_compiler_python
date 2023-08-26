@@ -36,3 +36,15 @@ class Parser:
 
     def abort(self, message):
         sys.exit("Error. " + message)
+
+    # One of the following statements...
+    def statement(self):
+        pass
+
+    # program ::= {statement}
+    def program(self):
+        print("PROGRAM")
+
+        # Parse all the statements in the program.
+        while not self.check_token(TokenType.EOF):
+            self.statement()
