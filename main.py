@@ -1,15 +1,23 @@
+import sys
+
 from lex import Lexer
-from lex_token import TokenType
+from parse import Parser
 
 
 def main():
-    source = "IF+-123 foo*THEN/"
-    lexer = Lexer(source)
+    print("Teeny Tiny Compiler")
 
-    token = lexer.get_token()
-    while token.kind != TokenType.EOF:
-        print(token.text, " => ", token.kind)
-        token = lexer.get_token()
+    if len(sys.argv) != 2:
+        sys.exit("Error: Compiler needs source file as argument.")
+    with open(sys.argv[1], "r") as input_file:
+        source = input_file.read()
+
+    # Initialize the lexer and parser.
+    lexer = Lexer(source)
+    parser = Parser(lexer)
+
+    parser.program()  # Start the parser.
+    print("Parsing completed.")
 
 
 if __name__ == "__main__":
