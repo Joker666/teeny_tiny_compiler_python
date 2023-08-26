@@ -38,8 +38,32 @@ class Parser:
         sys.exit("Error. " + message)
 
     # One of the following statements...
+    # nl ::= '\n'+
+    def nl(self):
+        print("NEWLINE")
+
+        # Require at least one newline.
+        self.match(TokenType.NEWLINE)
+        # But we will allow extra newlines too, of course.
+        while self.check_token(TokenType.NEWLINE):
+            self.next_token()
+
     def statement(self):
-        pass
+        # Check the first token to see what kind of statement this is.
+
+        # "PRINT" (expression | string)
+        if self.check_token(TokenType.PRINT):
+            print("STATEMENT-PRINT")
+            self.next_token()
+
+            if self.check_token(TokenType.STRING):
+                # Simple string.
+                self.next_token()
+            else:
+                # Expect an expression.
+                self.expression()
+
+        self.nl()
 
     # program ::= {statement}
     def program(self):
