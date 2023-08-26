@@ -63,12 +63,85 @@ class Parser:
                 # Expect an expression.
                 self.expression()
 
+        elif self.check_token(TokenType.IF):
+            # "IF" comparison "THEN" {statement} "ENDIF"
+            print("STATEMENT-IF")
+            self.next_token()
+            self.comparison()
+
+            self.match(TokenType.THEN)
+            self.nl()
+
+            while not self.check_token(TokenType.ENDIF):
+                self.statement()
+
+            self.match(TokenType.ENDIF)
+
+        elif self.check_token(TokenType.WHILE):
+            print("STATEMENT-WHILE")
+            self.next_token()
+            self.comparison()
+
+            self.match(TokenType.REPEAT)
+            self.nl()
+
+            while not self.check_token(TokenType.ENDWHILE):
+                self.statement()
+
+            self.match(TokenType.ENDWHILE)
+
+        elif self.check_token(TokenType.LABEL):
+            # "LABEL" ident
+            print("STATEMENT-LABEL")
+            self.next_token()
+            self.match(TokenType.IDENT)
+
+        elif self.check_token(TokenType.GOTO):
+            # "GOTO" ident
+            print("STATEMENT-GOTO")
+            self.next_token()
+            self.match(TokenType.IDENT)
+
+        elif self.check_token(TokenType.LET):
+            # "LET" ident "=" expression
+            print("STATEMENT-LET")
+            self.next_token()
+            self.match(TokenType.IDENT)
+            self.match(TokenType.EQ)
+            self.expression()
+
+        elif self.check_token(TokenType.INPUT):
+            # "INPUT" ident
+            print("STATEMENT-INPUT")
+            self.next_token()
+            self.match(TokenType.IDENT)
+
+        else:
+            # This is not a valid statement. Error!
+            self.abort(
+                "Invalid statement at "
+                + self.cur_token.text
+                + " ("
+                + self.cur_token.kind.name
+                + ")"
+            )
+
         self.nl()
 
     # program ::= {statement}
     def program(self):
         print("PROGRAM")
 
+        # Since some newlines are required in our grammar, need to skip the excess.
+        while self.check_token(TokenType.NEWLINE):
+            self.next_token()
+
         # Parse all the statements in the program.
         while not self.check_token(TokenType.EOF):
             self.statement()
+
+    def expression(self):
+        pass
+
+    def comparison(self):
+        pass
