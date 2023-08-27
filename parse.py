@@ -62,8 +62,7 @@ class Parser:
             else:
                 # Expect an expression.
                 self.expression()
-
-        elif self.check_token(TokenType.IF):
+        elif self.check_token(TokenType.IF):  # Branched statement
             # "IF" comparison "THEN" {statement} "ENDIF"
             print("STATEMENT-IF")
             self.next_token()
@@ -76,8 +75,7 @@ class Parser:
                 self.statement()
 
             self.match(TokenType.ENDIF)
-
-        elif self.check_token(TokenType.WHILE):
+        elif self.check_token(TokenType.WHILE):  # Branched statement
             print("STATEMENT-WHILE")
             self.next_token()
             self.comparison()
@@ -89,19 +87,16 @@ class Parser:
                 self.statement()
 
             self.match(TokenType.ENDWHILE)
-
         elif self.check_token(TokenType.LABEL):
             # "LABEL" ident
             print("STATEMENT-LABEL")
             self.next_token()
             self.match(TokenType.IDENT)
-
         elif self.check_token(TokenType.GOTO):
             # "GOTO" ident
             print("STATEMENT-GOTO")
             self.next_token()
             self.match(TokenType.IDENT)
-
         elif self.check_token(TokenType.LET):
             # "LET" ident "=" expression
             print("STATEMENT-LET")
@@ -109,13 +104,11 @@ class Parser:
             self.match(TokenType.IDENT)
             self.match(TokenType.EQ)
             self.expression()
-
         elif self.check_token(TokenType.INPUT):
             # "INPUT" ident
             print("STATEMENT-INPUT")
             self.next_token()
             self.match(TokenType.IDENT)
-
         else:
             # This is not a valid statement. Error!
             self.abort(
@@ -143,5 +136,31 @@ class Parser:
     def expression(self):
         pass
 
+    # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
     def comparison(self):
-        pass
+        print("COMPARISON")
+
+        self.expression()
+
+        # Must be at least one comparison operator and another expression.
+        if self.is_comparison_operator():
+            self.next_token()
+            self.expression()
+        else:
+            self.abort("Expected comparison operator at: " + self.cur_token.text)
+
+        # Can have 0 or more comparison operator and expressions.
+        while self.is_comparison_operator():
+            self.next_token()
+            self.expression()
+
+    # Return true if the current token is a comparison operator.
+    def is_comparison_operator(self):
+        return (
+            self.check_token(TokenType.GT)
+            or self.check_token(TokenType.GTEQ)
+            or self.check_token(TokenType.LT)
+            or self.check_token(TokenType.LTEQ)
+            or self.check_token(TokenType.EQEQ)
+            or self.check_token(TokenType.NOTEQ)
+        )
