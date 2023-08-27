@@ -133,9 +133,6 @@ class Parser:
         while not self.check_token(TokenType.EOF):
             self.statement()
 
-    def expression(self):
-        pass
-
     # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
     def comparison(self):
         print("COMPARISON")
@@ -153,6 +150,49 @@ class Parser:
         while self.is_comparison_operator():
             self.next_token()
             self.expression()
+
+    # expression ::= term {( "-" | "+" ) term}
+    def expression(self):
+        print("EXPRESSION")
+
+        self.term()
+
+        # Can have 0 or more +/- and expressions.
+        while self.check_token(TokenType.MINUS) or self.check_token(TokenType.PLUS):
+            self.next_token()
+            self.term()
+
+    # term ::= unary {( "/" | "*" ) unary}
+    def term(self):
+        print("TERM")
+
+        self.unary()
+
+        # Can have 0 or more *// and expressions.
+        while self.check_token(TokenType.SLASH) or self.check_token(TokenType.ASTERISK):
+            self.next_token()
+            self.unary()
+
+    # unary ::= ["+" | "-"] primary
+    def unary(self):
+        print("UNARY")
+
+        # Optional unary +/-
+        if self.check_token(TokenType.PLUS) or self.check_token(TokenType.MINUS):
+            self.next_token()
+        self.primary()
+
+    # primary ::= number | ident
+    def primary(self):
+        print("PRIMARY (" + self.cur_token.text + ")")
+
+        if self.check_token(TokenType.NUMBER):
+            self.next_token()
+        elif self.check_token(TokenType.IDENT):
+            self.next_token()
+        else:
+            # Error!
+            self.abort("Unexpected token at " + self.cur_token.text)
 
     # Return true if the current token is a comparison operator.
     def is_comparison_operator(self):
