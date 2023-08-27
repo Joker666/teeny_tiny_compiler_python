@@ -9,6 +9,10 @@ class Parser:
     def __init__(self, lexer: Lexer):
         self.lexer = lexer
 
+        self.symbols = set()  # Variables declared so far.
+        self.labels_declared = set()  # Labels declared so far.
+        self.labels_gotoed = set()  # Labels goto'ed so far.
+
         self.cur_token = None
         self.peek_token = None
         self.next_token()
@@ -35,7 +39,7 @@ class Parser:
         # No need to worry about passing the EOF, lexer handles that.
 
     def abort(self, message):
-        sys.exit("Error. " + message)
+        raise Exception("Error! " + message)
 
     # One of the following statements...
     # nl ::= '\n'+
@@ -91,16 +95,30 @@ class Parser:
             # "LABEL" ident
             print("STATEMENT-LABEL")
             self.next_token()
+
+            # Make sure this label doesn't already exist.
+            if self.cur_token.text in self.labels_declared:
+                self.abort("Label already exists: " + self.cur_token.text)
+            self.labels_declared.add(self.cur_token.text)
+
             self.match(TokenType.IDENT)
         elif self.check_token(TokenType.GOTO):
             # "GOTO" ident
             print("STATEMENT-GOTO")
             self.next_token()
+
+            self.labels_gotoed.add(self.cur_token.text)
+
             self.match(TokenType.IDENT)
         elif self.check_token(TokenType.LET):
             # "LET" ident "=" expression
             print("STATEMENT-LET")
             self.next_token()
+
+            #  Check if ident exists in symbol table. If not, declare it.
+            if self.cur_token.text not in self.symbols:
+                self.symbols.add(self.cur_token.text)
+
             self.match(TokenType.IDENT)
             self.match(TokenType.EQ)
             self.expression()
@@ -108,6 +126,11 @@ class Parser:
             # "INPUT" ident
             print("STATEMENT-INPUT")
             self.next_token()
+
+            # If variable doesn't already exist, declare it.
+            if self.cur_token.text not in self.symbols:
+                self.symbols.add(self.cur_token.text)
+
             self.match(TokenType.IDENT)
         else:
             # This is not a valid statement. Error!
@@ -132,6 +155,11 @@ class Parser:
         # Parse all the statements in the program.
         while not self.check_token(TokenType.EOF):
             self.statement()
+
+        # Check that each label referenced in a GOTO is declared.
+        for label in self.labels_gotoed:
+            if label not in self.labels_declared:
+                self.abort("Attempting to GOTO to undeclared label: " + label)
 
     # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
     def comparison(self):
@@ -189,6 +217,12 @@ class Parser:
         if self.check_token(TokenType.NUMBER):
             self.next_token()
         elif self.check_token(TokenType.IDENT):
+            # Ensure the variable already exists.
+            if self.cur_token.text not in self.symbols:
+                self.abort(
+                    "Referencing variable before assignment: " + self.cur_token.text
+                )
+
             self.next_token()
         else:
             # Error!
