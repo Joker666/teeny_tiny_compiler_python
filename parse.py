@@ -1,5 +1,3 @@
-import sys
-
 from lex import Lexer
 from lex_token import TokenType
 
