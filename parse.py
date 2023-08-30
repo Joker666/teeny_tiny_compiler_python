@@ -61,36 +61,43 @@ class Parser:
             self.next_token()
 
             if self.check_token(TokenType.STRING):
-                # Simple string.
+                # Simple string, so print it.
+                self.emitter.emit_line('printf("' + self.cur_token.text + '\\n");')
                 self.next_token()
             else:
-                # Expect an expression.
+                # Expect an expression and print the result as a float.
+                self.emitter.emit('printf("%' + '.2f\\n", (float)(')
                 self.expression()
+                self.emitter.emit_line("));")
         elif self.check_token(TokenType.IF):  # Branched statement
             # "IF" comparison "THEN" {statement} "ENDIF"
-            print("STATEMENT-IF")
             self.next_token()
+            self.emitter.emit("if(")
             self.comparison()
 
             self.match(TokenType.THEN)
             self.nl()
+            self.emitter.emit_line("){")
 
             while not self.check_token(TokenType.ENDIF):
                 self.statement()
 
             self.match(TokenType.ENDIF)
+            self.emitter.emit_line("}")
         elif self.check_token(TokenType.WHILE):  # Branched statement
-            print("STATEMENT-WHILE")
             self.next_token()
+            self.emitter.emit("while(")
             self.comparison()
 
             self.match(TokenType.REPEAT)
             self.nl()
+            self.emitter.emit_line("){")
 
             while not self.check_token(TokenType.ENDWHILE):
                 self.statement()
 
             self.match(TokenType.ENDWHILE)
+            self.emitter.emit_line("}")
         elif self.check_token(TokenType.LABEL):
             # "LABEL" ident
             print("STATEMENT-LABEL")
@@ -101,6 +108,7 @@ class Parser:
                 self.abort("Label already exists: " + self.cur_token.text)
             self.labels_declared.add(self.cur_token.text)
 
+            self.emitter.emit_line(self.cur_token.text + ":")
             self.match(TokenType.IDENT)
         elif self.check_token(TokenType.GOTO):
             # "GOTO" ident
@@ -109,6 +117,7 @@ class Parser:
 
             self.labels_gotoed.add(self.cur_token.text)
 
+            self.emitter.emit_line("goto " + self.cur_token.text + ";")
             self.match(TokenType.IDENT)
         elif self.check_token(TokenType.LET):
             # "LET" ident "=" expression
