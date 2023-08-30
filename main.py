@@ -2,6 +2,7 @@ import sys
 
 from lex import Lexer
 from parse import Parser
+from emit import Emitter
 
 
 def main():
@@ -14,10 +15,12 @@ def main():
 
     # Initialize the lexer and parser.
     lexer = Lexer(source)
-    parser = Parser(lexer)
+    emitter = Emitter("out.c")
+    parser = Parser(lexer, emitter)
 
     parser.program()  # Start the parser.
-    print("Parsing completed.")
+    emitter.write_file()  # Write the output to file.
+    print("Compiling completed.")
 
 
 if __name__ == "__main__":

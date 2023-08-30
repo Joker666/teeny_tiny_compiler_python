@@ -1,11 +1,13 @@
 from lex import Lexer
 from lex_token import TokenType
+from emit import Emitter
 
 
 # Parser object keeps track of current token and checks if the code matches the grammar.
 class Parser:
-    def __init__(self, lexer: Lexer):
+    def __init__(self, lexer: Lexer, emitter: Emitter):
         self.lexer = lexer
+        self.emitter = emitter
 
         self.symbols = set()  # Variables declared so far.
         self.labels_declared = set()  # Labels declared so far.
@@ -144,7 +146,8 @@ class Parser:
 
     # program ::= {statement}
     def program(self):
-        print("PROGRAM")
+        self.emitter.header_line("#include <stdio.h>")
+        self.emitter.header_line("int main(void) {")
 
         # Since some newlines are required in our grammar, need to skip the excess.
         while self.check_token(TokenType.NEWLINE):
@@ -153,6 +156,10 @@ class Parser:
         # Parse all the statements in the program.
         while not self.check_token(TokenType.EOF):
             self.statement()
+
+        # Wrap things up.
+        self.emitter.emit_line("return 0;")
+        self.emitter.emit_line("}")
 
         # Check that each label referenced in a GOTO is declared.
         for label in self.labels_gotoed:
